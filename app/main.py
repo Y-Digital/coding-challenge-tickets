@@ -1,17 +1,25 @@
 from fastapi import FastAPI
-from schemas import TicketInput, TriageResult
+
+from app.schemas import TicketInput, TriageResult
+from app.triage import triage_ticket
 
 app = FastAPI()
 
-@app.get('/health')
+
+@app.get("/health")
 async def health():
-    return {'status': 'ok'}
+    return {"status": "ok"}
 
 
-@app.post('/triage')
-async def triage_ticket(req: TicketInput) -> TriageResult:
-    pass
+@app.post("/triage")
+async def triage(req: TicketInput) -> TriageResult:
+    return triage_ticket(req)
 
-@app.post('/batch-triage')
-async def batch_triage_ticket(req: list[TicketInput]) -> list[TriageResult]:
-    pass
+
+@app.post("/batch-triage")
+async def batch_triage(req: list[TicketInput]) -> list[TriageResult]:
+    return [triage_ticket(ticket) for ticket in req]
+
+@app.get('/openapi')
+async def openapi() -> dict:
+    return app.openapi()
