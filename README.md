@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build and deploy a small Python service that ingests support tickets and returns
+Build a small Python service that ingests support tickets and returns
 structured triage information using an LLM (Azure OpenAI).
 
 **Timebox: 2 hours.** Stop at the time limit and write what you'd do next in `NOTES.md`.
@@ -73,7 +73,6 @@ Triage multiple tickets in one call.
 
 ## Nice to Have
 
-- [ ] Deployed to Azure Container Apps
 - [ ] Structured logging (JSON)
 - [ ] Retry policy with back-off on LLM calls
 - [ ] Simple rate limiter for `/batch-triage`
@@ -117,27 +116,21 @@ make test         # or: pytest -v
 
 ---
 
-## Deploying to Azure Container Apps
-
-See `deploy/deploy.sh` for a template script. Fill in the resource names you
-receive and run it.
-
----
-
 ## Evaluation Rubric (20 points)
 
-| Area                    | Points | What we look for                                                    |
-| ----------------------- | ------ | ------------------------------------------------------------------- |
-| **Python + API**        | 0–6    | Clean FastAPI, Pydantic models, sensible structure, async, errors   |
-| **AI Integration**      | 0–6    | Prompt discipline, schema enforcement, JSON repair, mocked tests    |
-| **Azure + Deployment**  | 0–6    | Env vars, no committed secrets, deploys or clear explanation of gap |
-| **Communication**       | 0–2    | README updates, NOTES.md with tradeoffs and next steps              |
+| Area                    | Points | What we look for                                                        |
+| ----------------------- | ------ | ----------------------------------------------------------------------- |
+| **Python + API**        | 0–6    | Clean FastAPI, Pydantic models, sensible structure, async, errors       |
+| **AI Integration**      | 0–6    | Prompt discipline, schema enforcement, JSON repair, mocked tests        |
+| **DevOps + Packaging**  | 0–6    | Env vars, no committed secrets, Docker, well-organised project layout   |
+| **Communication**       | 0–2    | README updates, NOTES.md with tradeoffs and next steps                  |
 
 ---
 
-## Deliverables
+## How to Submit
 
-1. Repo link or zip
-2. `NOTES.md` (max 1 page): what works, what's missing, how you'd productionise
+1. Create a branch named `solution/<your-name>` and commit your work there.
+2. Push the branch and let us know via email.
+3. Include a completed `NOTES.md` (max 1 page): what works, what's missing, how you'd productionise.
 
 Good luck!
