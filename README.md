@@ -2,8 +2,8 @@
 
 ## Goal
 
-Build a small Python service that triages customer support tickets using an LLM
-(Azure OpenAI).
+Build a Python service that triages customer support tickets using an LLM
+(Azure OpenAI), containerise it, and prepare it for deployment to Kubernetes.
 
 **Timebox: 2 hours.** Stop at the time limit and write what you'd do next in
 `NOTES.md`. Incomplete is perfectly OK — we value engineering judgment over
@@ -11,9 +11,34 @@ feature count.
 
 ---
 
-## Endpoints
+## What You're Given
 
-### `POST /triage`
+```
+app/
+  __init__.py
+  schemas.py       ← Pydantic models for request & response (do not change)
+tests/
+  conftest.py      ← Test fixtures — shows the expected app structure
+  test_api_validation.py
+  test_triage_mocked.py
+data/
+  tickets.jsonl    ← 25 sample tickets for manual testing
+requirements.txt   ← Base dependencies (add more as needed)
+Makefile           ← Expected commands: make dev, make test, make build, make run
+.env.example       ← Azure OpenAI credentials template
+```
+
+## What You Need to Build
+
+### 1. FastAPI application (`app/main.py`)
+
+Create the FastAPI app with these endpoints:
+
+#### `GET /health`
+
+Returns `{"status": "ok"}`.
+
+#### `POST /triage`
 
 Triage a single support ticket.
 
@@ -47,63 +72,56 @@ Triage a single support ticket.
 | `actions`    | List of recommended next-step strings                    |
 | `confidence` | Float 0.0–1.0                                            |
 
-### `POST /batch-triage`
+#### `POST /batch-triage`
 
 Triage multiple tickets in one call.
 
-**Request:** a JSON array of ticket objects (same shape as `/triage` input).
+**Request:** a JSON array of ticket objects (same shape as `/triage`).
 
 **Response:** a JSON array of triage results.
 
----
+### 2. LLM integration
 
-## What You Need to Do
+Call Azure OpenAI to produce the triage output. Your implementation should:
 
-The scaffold is a working FastAPI app. The only piece missing is the LLM call.
+- Build a prompt that instructs the model to return JSON matching the schema
+- Parse and validate the response with Pydantic
+- Handle invalid JSON from the model gracefully (retry or repair)
 
-**Your main task:** implement the `triage_ticket()` function in `app/llm.py`.
+### 3. Dockerfile
 
-This function should:
+Create a `Dockerfile` that builds and runs the service. The following should
+work:
 
-1. Call Azure OpenAI with a prompt that includes the ticket details
-2. Instruct the model to return JSON matching the `TriageResult` schema
-3. Parse and validate the response using Pydantic
-4. If the model returns invalid JSON, retry once with a "fix it" prompt
+```bash
+make build        # builds the Docker image
+make run          # runs the container on port 8000
+```
 
-Everything else (endpoints, schemas, tests, Docker) is already wired up and
-will work once `triage_ticket()` is implemented.
+### 4. Kubernetes manifests
 
-### Must Have
+Create a `k8s/` directory with manifests to deploy the service to a Kubernetes
+cluster. At minimum:
 
-- [ ] `triage_ticket()` calls Azure OpenAI and returns a valid `TriageResult`
-- [ ] Handles invalid LLM output gracefully (retry / repair)
-- [ ] All tests pass (`make test`)
-- [ ] Runs locally (`make run` or `docker compose up`)
-- [ ] No secrets committed to git
+- `deployment.yaml` — runs the container, injects config via env vars or secrets
+- `service.yaml` — exposes the service within the cluster
 
-### Nice to Have
-
-- [ ] Structured logging (JSON format)
-- [ ] Retry with back-off on transient LLM errors
-- [ ] Concurrency or rate limiting in `/batch-triage`
-- [ ] Additional tests
+Use Kubernetes Secrets or ConfigMaps for the Azure OpenAI credentials — do not
+hardcode them in the manifests.
 
 ---
 
-## Project Structure
+## Tests
 
+The test suite is provided. **All 5 tests should pass** once your app is
+implemented. The tests mock the LLM call, so they need no Azure credentials.
+
+```bash
+make test         # or: pytest -v
 ```
-app/
-  main.py       ← FastAPI app + endpoints (provided, no changes needed)
-  schemas.py    ← Pydantic models for request/response (provided)
-  llm.py        ← ★ YOUR TODO: implement triage_ticket()
-tests/
-  conftest.py   ← Test setup: mocks out the LLM call
-  test_api_validation.py    ← Tests for input validation (422s)
-  test_triage_mocked.py     ← Tests with mocked LLM (deterministic)
-data/
-  tickets.jsonl ← 25 sample tickets for manual testing
-```
+
+> **Hint:** look at `tests/conftest.py` to understand the expected structure of
+> your application — it shows how the mock is wired up.
 
 ---
 
@@ -122,38 +140,34 @@ Copy `.env.example` to `.env` and fill in the values you receive.
 
 ---
 
-## Running Locally
+## Must Have
 
-```bash
-# With Docker
-make build
-make run          # or: docker compose up
+- [ ] FastAPI app with `/health`, `/triage`, and `/batch-triage`
+- [ ] Calls Azure OpenAI and returns valid `TriageResult` JSON
+- [ ] Handles invalid LLM output (retry / repair)
+- [ ] All provided tests pass
+- [ ] `Dockerfile` — image builds and runs
+- [ ] `k8s/` manifests — deployment + service, secrets not hardcoded
+- [ ] No secrets committed to git
 
-# Without Docker
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # fill in your values
-make dev               # or: uvicorn app.main:app --reload
-```
+## Nice to Have
 
-## Running Tests
-
-```bash
-make test         # or: pytest -v
-```
-
-Tests use a mock — they don't need Azure credentials or network access.
+- [ ] Request logging (request id, timing)
+- [ ] Retry with back-off on transient LLM errors
+- [ ] Concurrency or rate limiting in `/batch-triage`
+- [ ] Additional tests
+- [ ] `docker-compose.yml` for local development
 
 ---
 
 ## Evaluation Rubric (20 points)
 
-| Area                   | Points | What we look for                                                        |
-| ---------------------- | ------ | ----------------------------------------------------------------------- |
-| **Python + API**       | 0–6    | Clean code, Pydantic use, error handling, sensible structure            |
-| **AI Integration**     | 0–6    | Prompt quality, JSON schema enforcement, repair logic, mocked tests     |
-| **DevOps + Packaging** | 0–6    | Env vars, no committed secrets, Docker works, project layout            |
-| **Communication**      | 0–2    | README updates, NOTES.md with tradeoffs and next steps                  |
+| Area                       | Points | What we look for                                                    |
+| -------------------------- | ------ | ------------------------------------------------------------------- |
+| **Python + API**           | 0–6    | Clean code, Pydantic use, error handling, working endpoints         |
+| **AI Integration**         | 0–6    | Prompt quality, JSON schema enforcement, repair logic, tests pass   |
+| **Docker + Kubernetes**    | 0–6    | Working Dockerfile, valid K8s manifests, secrets handling           |
+| **Communication**          | 0–2    | NOTES.md with tradeoffs and next steps                              |
 
 ---
 

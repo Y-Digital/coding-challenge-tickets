@@ -1,10 +1,10 @@
-.PHONY: build run dev test lint clean
+.PHONY: build run dev test clean
 
 build:
-	docker compose build
+	docker build -t triage-api .
 
 run:
-	docker compose up
+	docker run --rm -p 8000:8000 --env-file .env triage-api
 
 dev:
 	uvicorn app.main:app --reload --port 8000
@@ -12,9 +12,5 @@ dev:
 test:
 	pytest -v
 
-lint:
-	ruff check app/ tests/
-
 clean:
-	docker compose down --rmi local
 	find . -type d -name __pycache__ -exec rm -rf {} +
