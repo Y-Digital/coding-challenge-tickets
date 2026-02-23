@@ -10,3 +10,5 @@ build/
 chatgpt.txt
 REVIEWER_GUIDE.md
 env/
+.idea/
+credentials.txt
