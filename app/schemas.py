@@ -3,8 +3,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-# ── Request models ──────────────────────────────────────────────
-
+# ── Request ──────────────────────────────────────────────────────
 
 class CustomerTier(str, Enum):
     enterprise = "enterprise"
@@ -18,8 +17,7 @@ class TicketInput(BaseModel):
     customer_tier: CustomerTier
 
 
-# ── Response models ─────────────────────────────────────────────
-
+# ── Response ─────────────────────────────────────────────────────
 
 class TriageCategory(str, Enum):
     billing = "billing"

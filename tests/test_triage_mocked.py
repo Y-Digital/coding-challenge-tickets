@@ -1,12 +1,11 @@
 """
-Test 2: Triage with mocked LLM — deterministic behaviour.
+Test: Triage with mocked LLM — deterministic behaviour.
 
 TODO (candidate): extend with more assertions or scenarios.
 """
 
 
 def test_triage_returns_valid_result(client):
-    """POST /triage with valid input should return a well-formed TriageResult."""
     resp = client.post(
         "/triage",
         json={
@@ -24,7 +23,6 @@ def test_triage_returns_valid_result(client):
 
 
 def test_batch_triage_returns_list(client):
-    """POST /batch-triage should return one result per ticket."""
     tickets = [
         {
             "subject": "Billing issue",

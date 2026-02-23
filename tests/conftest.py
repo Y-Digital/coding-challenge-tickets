@@ -1,30 +1,23 @@
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 
-from app.main import app
-from app.schemas import TicketInput, TriageResult
-from app.services.llm_client import BaseLLMClient
+from app.schemas import TriageResult
 
 
-class MockLLMClient(BaseLLMClient):
-    """Deterministic mock that always returns a fixed triage result."""
-
-    async def triage_ticket(self, ticket: TicketInput) -> TriageResult:
-        return TriageResult(
-            category="bug",
-            priority="high",
-            summary=f"Mock triage for: {ticket.subject}",
-            actions=["Investigate issue", "Notify engineering"],
-            confidence=0.95,
-        )
+MOCK_RESULT = TriageResult(
+    category="bug",
+    priority="high",
+    summary="Mock triage result",
+    actions=["Investigate issue", "Notify engineering"],
+    confidence=0.95,
+)
 
 
 @pytest.fixture()
-def mock_llm_client():
-    return MockLLMClient()
+def client():
+    """Test client with the LLM call mocked out (no network, no API key needed)."""
+    with patch("app.main.triage_ticket", return_value=MOCK_RESULT):
+        from app.main import app
 
-
-@pytest.fixture()
-def client(mock_llm_client):
-    app.state.llm_client = mock_llm_client
-    return TestClient(app)
+        yield TestClient(app)

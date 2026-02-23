@@ -8,4 +8,5 @@ dist/
 build/
 .ruff_cache/
 chatgpt.txt
+REVIEWER_GUIDE.md
 env/
