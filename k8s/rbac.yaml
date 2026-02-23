@@ -1,0 +1,44 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: azureaiservice-operator
+  namespace: default
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: azureaiservice-operator
+rules:
+  - apiGroups: ["ally-dev-gpt.openai.azure.com"]
+    resources: ["azureaiservices", "azureaiservices/status"]
+    verbs: ["get", "list", "watch", "patch", "update"]
+
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "patch", "update", "delete"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch", "create", "patch", "update", "delete"]
+
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "patch", "update", "delete"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: azureaiservice-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: azureaiservice-operator
+subjects:
+  - kind: ServiceAccount
+    name: azureaiservice-operator
+    namespace: default
